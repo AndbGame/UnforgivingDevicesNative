@@ -36,7 +36,7 @@ void ORS::OrgasmManager::Update(float a_delta)
     UniqueLock lock(_lock);
     if (a_delta <= 0.0f) return;
 
-    //LOG("OrgasmManager::Update({})",a_delta)
+    LOG("OrgasmManager::Update({})",a_delta)
 
     std::vector<uint32_t> loc_toremove;
     for (auto&& it :_actors)
@@ -45,6 +45,9 @@ void ORS::OrgasmManager::Update(float a_delta)
         //check if actor is dead. If yes, unregister it
         if (loc_actor && loc_actor->IsDead())
         {
+            loc_toremove.push_back(it.first);
+        } else if (loc_actor == nullptr) {
+            LOG("OrgasmManager::Update loc_toremove {}", it.first)
             loc_toremove.push_back(it.first);
         }
     }
@@ -74,7 +77,7 @@ void ORS::OrgasmManager::Update(float a_delta)
 
     for (auto&& it : loc_threads) it.join();
 
-    //LOG("OrgasmManager::Update({}) - Done",a_delta)
+    LOG("OrgasmManager::Update({}) - Done",a_delta)
 }
 
 bool ORS::OrgasmManager::AddOrgasmChange(RE::Actor* a_actor, std::string a_key, OrgasmMod a_mod, EroZone a_erozones, float a_orgasmRate, float a_orgasmRateMult, float a_orgasmForcing, float a_orgasmCapacity, float a_orgasmResisten, float a_orgasmResistenceMult)
@@ -354,8 +357,8 @@ void ORS::OrgasmManager::OnGameLoaded(SKSE::SerializationInterface* serde)
 
                 UniqueLock lock(_lock);
 
-                DEBUG("Loaded actor {} from save",loc_actor->GetName())
                 auto loc_handle = loc_actor->GetHandle().native_handle();
+                DEBUG("Loaded actor {:08X}:{} from save {}", loc_actor->GetFormID(), loc_actor->GetName(), loc_handle)
                 _actors[loc_handle] = OrgasmActorData();
                 _actors[loc_handle].SetActor(loc_actor);
                 _actors[loc_handle].UpdatePosition();
@@ -381,10 +384,11 @@ void ORS::OrgasmManager::OnGameSaved(SKSE::SerializationInterface* serde)
     for (auto&& it : _actors)
     {
         RE::Actor* loc_actor = RE::Actor::LookupByHandle(it.first).get();
+        LOG("Saving actor pre {:08X}", loc_actor->GetFormID())
         OrgasmActorData loc_od = it.second;
         RE::FormID loc_formid = loc_actor->GetFormID();
-        serde->WriteRecordData(&loc_formid,sizeof(RE::FormID));
-        LOG("Saving actor {}",loc_actor->GetName())
+        serde->WriteRecordData(&loc_formid, sizeof(RE::FormID));
+        LOG("Saving actor post {:08X}", loc_actor->GetFormID())
         loc_od.OnGameSaved(serde);
     }
 

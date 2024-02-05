@@ -13,10 +13,14 @@ void UD::Diagnosis::Setup()
         if (dllHandle != NULL)
         {
             FARPROC pGetDatabase = GetProcAddress(HMODULE (dllHandle),"GetDatabase");
-            DDNGGetDatabase = GetDatabase(pGetDatabase);
-            DEBUG("Disagnosis::Setup() - GetDatabase imported - addrs = 0x{:016X}",(uintptr_t)DDNGGetDatabase)
-            _imported = DDNGGetDatabase != NULL;
-            //FreeLibrary(dllHandle);
+            if (pGetDatabase) {
+                DDNGGetDatabase = GetDatabase(pGetDatabase);
+                DEBUG("Disagnosis::Setup() - GetDatabase imported - addrs = 0x{:016X}", (uintptr_t)DDNGGetDatabase)
+                _imported = DDNGGetDatabase != NULL;
+                // FreeLibrary(dllHandle);
+            } else {
+                ERROR("Disagnosis::Setup() - ERROR: Cant GetProcAddress DeviousDevices.dll!!")
+            }
         }
         else
         {
@@ -26,8 +30,8 @@ void UD::Diagnosis::Setup()
     }
 }
 
-int UD::Diagnosis::CheckPatchedDevices()
-{
+int UD::Diagnosis::CheckPatchedDevices() {
+    return 0;
     DEBUG("CheckPatchedDevices called")
     if (!_imported || (DDNGGetDatabase == nullptr)) 
     {
